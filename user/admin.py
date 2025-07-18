@@ -1,6 +1,7 @@
-from django.contrib import admin
-from django.contrib.auth import get_user_model
+from django.apps import AppConfig
 
-User = get_user_model()
 
-admin.site.register(User)
+class UserConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "user"
+

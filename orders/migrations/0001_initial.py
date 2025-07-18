@@ -12,25 +12,27 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='ShoppingCart',
+            name='Order',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('status', models.CharField(choices=[('pending', 'Ожидание'), ('paid', 'Оплачен'), ('shipped', 'Отправлен'), ('cancelled', 'Отменён')], default='pending', max_length=20)),
             ],
             options={
-                'verbose_name': 'Корзина',
-                'verbose_name_plural': 'Корзины',
+                'verbose_name': 'Заказ',
+                'verbose_name_plural': 'Заказы',
             },
         ),
         migrations.CreateModel(
-            name='ShoppingCartItem',
+            name='OrderItem',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('quantity', models.PositiveIntegerField(default=1)),
+                ('quantity', models.PositiveIntegerField()),
+                ('price_at_purchase', models.DecimalField(decimal_places=2, max_digits=10)),
             ],
             options={
-                'verbose_name': 'Товар в корзине',
-                'verbose_name_plural': 'Товары в корзине',
+                'verbose_name': 'Товар в заказе',
+                'verbose_name_plural': 'Товары в заказе',
             },
         ),
     ]
