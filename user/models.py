@@ -34,9 +34,15 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    class Role(models.TextChoices):
+        admin = ("admin", "Administrator")
+        locale_admin = ("l_admin", "Local Admin")
+        user = ("user", "User")
+
     email = models.EmailField("email address", unique=True)
+    role = models.CharField(choices=Role.choices, default=Role.user, max_length=10)
     is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
 
     USERNAME_FIELD = "email"

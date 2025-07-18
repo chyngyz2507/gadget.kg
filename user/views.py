@@ -1,14 +1,18 @@
-from django.contrib.auth import get_user_model, authenticate
-from rest_framework.authtoken.models import Token
+from django.contrib.auth import get_user_model
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenViewBase, TokenRefreshView
+
+from user.serializers import RegisterUserSerializer, MyTokenObtainPairSerializer, RefreshSerializer
 from rest_framework.views import APIView
 
-from messages import LOGIN_INVALID_MESSAGE
-from user.serializers import RegisterUserSerializer, LoginSerializer
+from user.tasks import send_message
 
 User = get_user_model()
 
-class RegisterUser(APIView):
+
+class RegisterUserAPIView(APIView):
+    permission_classes = []
+
     def post(self, request, *args, **kwargs):
         serializer = RegisterUserSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -17,24 +21,22 @@ class RegisterUser(APIView):
             user = User(email=email)
             user.set_password(password)
             user.save()
+            send_message.delay(user.email, user.id)
         return Response(True)
 
 
-class LoginView(APIView):
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = authenticate(**serializer.validated_data)
-            if user:
-                token, created = Token.objects.get_or_create(user=user)
-                return Response({'token': token.key})
-            else:
-                return Response({'error': LOGIN_INVALID_MESSAGE}, status=401)
+class ActivateAPIView(APIView):
+    permission_classes = []
+    def get(self, request, pk):
+        user = User.objects.get(id=pk)
+        user.is_active= True
+        user.save()
+        return Response(True)
 
 
-class LogoutView(APIView):
-    def post(self, request):
-        if request.user:
-            token = Token.objects.get(user=request.user)
-            token.delete()
-        return Response({'succes': 'успех'}, status=401)
+class MyTokenObtainPairView(TokenViewBase):
+    serializer_class = MyTokenObtainPairSerializer
+
+
+class MyTokenRefreshView(TokenRefreshView):
+    serializer_class = RefreshSerializer
