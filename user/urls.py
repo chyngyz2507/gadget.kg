@@ -9,4 +9,3 @@ urlpatterns = [
     path('api/token/refresh/', views.MyTokenRefreshView.as_view(), name='token_refresh'),
     path('activate/<int:pk>/', views.ActivateAPIView.as_view(), name='active'),
 ]
-

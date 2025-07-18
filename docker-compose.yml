@@ -1,0 +1,57 @@
+
+services:
+   web:
+     build: .
+     container_name: gadget_kg
+     command: bash entrypoint.sh
+     ports:
+       - "8000:8000"
+     volumes:
+       - .:/app
+     depends_on:
+       db:
+         condition: service_healthy
+     env_file:
+       - .env
+     environment:
+       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+
+   db:
+     image: postgres:14
+     container_name: postgres_db
+     restart: always
+     environment:
+       POSTGRES_DB: ${POSTGRES_DB:-gadget_kg}
+       POSTGRES_USER: ${POSTGRES_USER:-postgres}
+       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+     volumes:
+       - postgres_data:/var/lib/postgresql/data
+     healthcheck:
+       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-gadget_kg}" ]
+       interval: 5s
+       timeout: 5s
+       retries: 5
+
+   redis:
+     image: redis:7-alpine
+     container_name: redis_server
+     ports:
+       - "6379:6379"
+     volumes:
+       - redis:/data
+
+   worker:
+     build: .
+     container_name: celery_worker
+     command: celery -A core worker -l info
+     volumes:
+       - .:/app
+     depends_on:
+       - db
+       - redis
+     env_file:
+       - .env
+
+volumes:
+  postgres_data:
+  redis:
